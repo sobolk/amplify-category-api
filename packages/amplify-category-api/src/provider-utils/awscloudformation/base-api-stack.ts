@@ -14,6 +14,7 @@ import { Construct } from 'constructs';
 import { NETWORK_STACK_LOGICAL_ID } from '../../category-constants';
 import Container from './docker-compose/ecs-objects/container';
 import { GitHubSourceActionInfo, PipelineWithAwaiter } from './pipeline-with-awaiter';
+import { prepareApp } from '../../../../../node_modules/aws-cdk-lib/core/lib/private/prepare-app';
 
 const PIPELINE_AWAITER_ZIP = 'custom-resource-pipeline-awaiter.zip';
 
@@ -513,16 +514,19 @@ export abstract class ContainersStack extends cdk.Stack {
         }
       });
 
-    const root = this.node.root as cdk.Stage;
+    // const root = this.node.root as cdk.Stage;
+    //
+    // const assembly = root.synth();
+    // let cfn;
+    // if (this.nestedStackParent) {
+    //   // if this is a nested stack (it has a parent), then just read the template as a string
+    //   cfn = JSON.parse(fs.readFileSync(path.join(assembly.directory, this.templateFile)).toString('utf-8'));
+    // } else {
+    //   cfn = assembly.getStackArtifact(this.artifactId).template;
+    // }
 
-    const assembly = root.synth();
-    let cfn;
-    if (this.nestedStackParent) {
-      // if this is a nested stack (it has a parent), then just read the template as a string
-      cfn = JSON.parse(fs.readFileSync(path.join(assembly.directory, this.templateFile)).toString('utf-8'));
-    } else {
-      cfn = assembly.getStackArtifact(this.artifactId).template;
-    }
+    prepareApp(this);
+    const cfn = this._toCloudFormation();
 
     Object.keys(cfn.Parameters).forEach(k => {
       if (k.startsWith('AssetParameters')) {
